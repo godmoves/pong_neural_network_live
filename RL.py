@@ -17,6 +17,7 @@ FINAL_EPSILON = 0.05
 # how many frames to anneal epsilon
 EXPLORE = 500000
 OBSERVE = 50000
+ADDITIONAL_OB = 50000
 # store our experiences, the size of it
 REPLAY_MEMORY = 500000
 # batch size to train on
@@ -98,6 +99,8 @@ def trainGraph(inp, out, sess):
 
     # saver
     saver = tf.train.Saver(tf.global_variables())
+    writer_long = tf.summary.FileWriter("./logs/long", sess.graph)
+    writer_short = tf.summary.FileWriter("./logs/short", sess.graph)
 
     sess.run(tf.global_variables_initializer())
 
@@ -106,14 +109,20 @@ def trainGraph(inp, out, sess):
         print("Restore Checkpoint %s" % (checkpoint))
         saver.restore(sess, checkpoint)
         print("Model restored.")
+        steps = global_step.eval()
+        OBSERVE = steps + ADDITIONAL_OB
     else:
         init = tf.global_variables_initializer()
         sess.run(init)
         print("Initialized new Graph")
+        steps = 0
 
-    epsilon = INITIAL_EPSILON
+    expected_epsilon = INITIAL_EPSILON - steps * (INITIAL_EPSILON - FINAL_EPSILON) / EXPLORE
+    if expected_epsilon > FINAL_EPSILON:
+        epsilon = expected_epsilon
+    else:
+        epsilon = FINAL_EPSILON
 
-    steps = global_step.eval()
     # training time
     while(1):
         # output tensor
@@ -131,7 +140,7 @@ def trainGraph(inp, out, sess):
             epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / EXPLORE
 
         # reward tensor if score is positive
-        reward_t, frame = game.getNextFrame(argmax_t)
+        reward_t, frame, hit_rate, hit_rate_100 = game.getNextFrame(argmax_t)
         # get frame pixel data
         frame = cv2.cvtColor(cv2.resize(frame, (84, 84)), cv2.COLOR_BGR2GRAY)
         ret, frame = cv2.threshold(frame, 1, 255, cv2.THRESH_BINARY)
@@ -175,8 +184,18 @@ def trainGraph(inp, out, sess):
         inp_t = inp_t1
         steps += 1
 
+        # record the agent's performance every 100 steps
+        if steps % 100 == 0:
+            summaries_long = tf.Summary(value=[
+                tf.Summary.Value(tag="hit_rate", simple_value=hit_rate)])
+            writer_long.add_summary(summaries_long, steps)
+            summaries_short = tf.Summary(value=[
+                tf.Summary.Value(tag="hit_rate", simple_value=hit_rate_100)])
+            writer_short.add_summary(summaries_short, steps)
+
         # print our where we are after saving where we are
         if steps % 10000 == 0:
+            sess.run(global_step.assign(steps))
             saver.save(sess, './checkpoints/pong-dqn', global_step=steps)
 
         print("TIMESTEP", steps, "/ EPSILON %7.5f" % epsilon, "/ ACTION", maxIndex,

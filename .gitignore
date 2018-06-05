@@ -2,3 +2,4 @@ __pycache__
 *.pyc
 pong-dqn*
 checkpoint
+logs

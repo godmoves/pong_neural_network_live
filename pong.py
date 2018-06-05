@@ -88,12 +88,12 @@ def updateBall(paddle1YPos, paddle2YPos, ballXPos, ballYPos, ballXDirection, bal
        ballYPos - BALL_HEIGHT <= paddle1YPos + PADDLE_HEIGHT:
         # switches directions
         ballXDirection = 1
+        score = 1
     # past it
     elif ballXPos <= 0:
         # negative score
         ballXDirection = 1
         score = -1
-        return [score, paddle1YPos, paddle2YPos, ballXPos, ballYPos, ballXDirection, ballYDirection]
 
     # check if hits the other side
     if ballXPos >= WINDOW_WIDTH - PADDLE_WIDTH - PADDLE_BUFFER and \
@@ -105,8 +105,7 @@ def updateBall(paddle1YPos, paddle2YPos, ballXPos, ballYPos, ballXDirection, bal
     elif ballXPos >= WINDOW_WIDTH - BALL_WIDTH:
         # positive score
         ballXDirection = -1
-        score = 1
-        return [score, paddle1YPos, paddle2YPos, ballXPos, ballYPos, ballXDirection, ballYDirection]
+        score = 10
 
     # if it hits the top
     # move down
@@ -164,7 +163,7 @@ class PongGame:
         self.tally = 0
         self.get = 0
         self.miss = 0
-        self.through = 0
+        self.recent_100 = []
         # initialie positions of paddle
         self.paddle1YPos = WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2
         self.paddle2YPos = WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2
@@ -239,5 +238,17 @@ class PongGame:
             self.get += 1
         elif score == -1:
             self.miss += 1
+        elif score == 10:
+            print("Pass it!")
+
+        if score != 0:
+            if len(self.recent_100) < 100:
+                self.recent_100.append(score)
+            else:
+                self.recent_100.pop(0)
+                self.recent_100.append(score)
+
+        hit_rate = self.get / (self.get + self.miss + 1)
+        hit_rate_100 = (sum(self.recent_100) + len(self.recent_100)) / (2 * len(self.recent_100) + 1)
         # return the score and the surface data
-        return [score, image_data]
+        return [score, image_data, hit_rate, hit_rate_100]
