@@ -244,11 +244,12 @@ class PongGame:
         if score != 0:
             if len(self.recent_100) < 100:
                 self.recent_100.append(score)
+                hit_rate_100 = (sum(self.recent_100) + len(self.recent_100)) / (2 * len(self.recent_100) + 1)
             else:
                 self.recent_100.pop(0)
                 self.recent_100.append(score)
+                hit_rate_100 = (sum(self.recent_100) + 100) / 201
 
         hit_rate = self.get / (self.get + self.miss + 1)
-        hit_rate_100 = (sum(self.recent_100) + len(self.recent_100)) / (2 * len(self.recent_100) + 1)
         # return the score and the surface data
         return [score, image_data, hit_rate, hit_rate_100]
