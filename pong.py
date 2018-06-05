@@ -202,9 +202,10 @@ class PongGame:
         drawPaddle2(self.paddle2YPos)
         # draw our ball
         drawBall(self.ballXPos, self.ballYPos)
-        drawScore(self.get, self.miss)
         # copies the pixels from our surface to a 3D array. we'll use this for RL
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
+        # draw score after we get the training frame
+        drawScore(self.get, self.miss)
         # updates the window
         pygame.display.flip()
         # return our surface data
@@ -226,9 +227,10 @@ class PongGame:
             self.paddle1YPos, self.paddle2YPos, self.ballXPos, self.ballYPos, self.ballXDirection, self.ballYDirection)
         # draw the ball
         drawBall(self.ballXPos, self.ballYPos)
-        drawScore(self.get, self.miss)
         # get the surface data
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
+        # draw score after we get the training frame
+        drawScore(self.get, self.miss)
         # update the window
         pygame.display.flip()
         # record the total score

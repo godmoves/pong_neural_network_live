@@ -29,19 +29,19 @@ def createGraph():
 
     # first convolutional layer. bias vector
     # creates an empty tensor with all elements set to zero with a shape
-    W_conv1 = tf.Variable(tf.zeros([8, 8, 4, 32]))
+    W_conv1 = tf.Variable(tf.truncated_normal([8, 8, 4, 32], stddev=0.02))
     b_conv1 = tf.Variable(tf.zeros([32]))
 
-    W_conv2 = tf.Variable(tf.zeros([4, 4, 32, 64]))
+    W_conv2 = tf.Variable(tf.truncated_normal([4, 4, 32, 64], stddev=0.02))
     b_conv2 = tf.Variable(tf.zeros([64]))
 
-    W_conv3 = tf.Variable(tf.zeros([3, 3, 64, 64]))
+    W_conv3 = tf.Variable(tf.truncated_normal([3, 3, 64, 64], stddev=0.02))
     b_conv3 = tf.Variable(tf.zeros([64]))
 
-    W_fc4 = tf.Variable(tf.zeros([3136, 784]))
+    W_fc4 = tf.Variable(tf.truncated_normal([3136, 784], stddev=0.02))
     b_fc4 = tf.Variable(tf.zeros([784]))
 
-    W_fc5 = tf.Variable(tf.zeros([784, ACTIONS]))
+    W_fc5 = tf.Variable(tf.truncated_normal([784, ACTIONS], stddev=0.02))
     b_fc5 = tf.Variable(tf.zeros([ACTIONS]))
 
     # input for pixel data
@@ -72,6 +72,7 @@ def trainGraph(inp, out, sess):
     # to calculate the argmax, we multiply the predicted output with a vector with one value 1 and rest as 0
     argmax = tf.placeholder("float", [None, ACTIONS])
     gt = tf.placeholder("float", [None])  # ground truth
+    global_step = tf.Variable(0, name='global_step', trainable=False)
 
     # action
     action = tf.reduce_sum(tf.multiply(out, argmax), reduction_indices=1)
@@ -96,13 +97,23 @@ def trainGraph(inp, out, sess):
     inp_t = np.stack((frame, frame, frame, frame), axis=2)
 
     # saver
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(tf.global_variables())
 
     sess.run(tf.global_variables_initializer())
 
-    t = 0
+    checkpoint = tf.train.latest_checkpoint('./checkpoints')
+    if checkpoint is not None:
+        print("Restore Checkpoint %s" % (checkpoint))
+        saver.restore(sess, checkpoint)
+        print("Model restored.")
+    else:
+        init = tf.global_variables_initializer()
+        sess.run(init)
+        print("Initialized new Graph")
+
     epsilon = INITIAL_EPSILON
 
+    steps = global_step.eval()
     # training time
     while(1):
         # output tensor
@@ -110,7 +121,6 @@ def trainGraph(inp, out, sess):
         # argmax function
         argmax_t = np.zeros([ACTIONS])
 
-        #
         if random.random() <= epsilon:
             maxIndex = random.randrange(ACTIONS)
         else:
@@ -137,7 +147,7 @@ def trainGraph(inp, out, sess):
             D.popleft()
 
         # training iteration
-        if t > OBSERVE:
+        if steps > OBSERVE:
 
             # get values from our replay memory
             minibatch = random.sample(D, BATCH)
@@ -163,13 +173,13 @@ def trainGraph(inp, out, sess):
 
         # update our input tensor the the next frame
         inp_t = inp_t1
-        t = t + 1
+        steps += 1
 
         # print our where we are after saving where we are
-        if t % 10000 == 0:
-            saver.save(sess, './' + 'pong' + '-dqn', global_step=t)
+        if steps % 10000 == 0:
+            saver.save(sess, './checkpoints/pong-dqn', global_step=steps)
 
-        print("TIMESTEP", t, "/ EPSILON", epsilon, "/ ACTION", maxIndex,
+        print("TIMESTEP", steps, "/ EPSILON %7.5f" % epsilon, "/ ACTION", maxIndex,
               "/ REWARD", reward_t, "/ Q_MAX %e" % np.max(out_t))
 
 
