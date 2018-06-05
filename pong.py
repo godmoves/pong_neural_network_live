@@ -68,6 +68,12 @@ def drawPaddle2(paddle2YPos):
     pygame.draw.rect(screen, WHITE, paddle2)
 
 
+def drawScore(get, miss):
+    font = pygame.font.Font(None, 28)
+    scorelabel = font.render("Get:{}  Miss:{}".format(get, miss), 1, WHITE)
+    screen.blit(scorelabel, (10, 10))
+
+
 # update the ball, using the paddle posistions the balls positions and the balls directions
 def updateBall(paddle1YPos, paddle2YPos, ballXPos, ballYPos, ballXDirection, ballYDirection):
 
@@ -151,10 +157,14 @@ def updatePaddle2(paddle2YPos, ballYPos):
 # game class
 class PongGame:
     def __init__(self):
+        pygame.font.init()
         # random number for initial direction of ball
         num = random.randint(0, 9)
         # keep score
         self.tally = 0
+        self.get = 0
+        self.miss = 0
+        self.through = 0
         # initialie positions of paddle
         self.paddle1YPos = WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2
         self.paddle2YPos = WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2
@@ -182,7 +192,6 @@ class PongGame:
         # where it will start, y part
         self.ballYPos = num * (WINDOW_HEIGHT - BALL_HEIGHT) / 9
 
-    #
     def getPresentFrame(self):
         # for each frame, calls the event queue, like if the main window needs to be repainted
         pygame.event.pump()
@@ -193,6 +202,7 @@ class PongGame:
         drawPaddle2(self.paddle2YPos)
         # draw our ball
         drawBall(self.ballXPos, self.ballYPos)
+        drawScore(self.get, self.miss)
         # copies the pixels from our surface to a 3D array. we'll use this for RL
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         # updates the window
@@ -216,12 +226,16 @@ class PongGame:
             self.paddle1YPos, self.paddle2YPos, self.ballXPos, self.ballYPos, self.ballXDirection, self.ballYDirection)
         # draw the ball
         drawBall(self.ballXPos, self.ballYPos)
+        drawScore(self.get, self.miss)
         # get the surface data
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         # update the window
         pygame.display.flip()
         # record the total score
         self.tally = self.tally + score
-        print("Tally is " + str(self.tally))
+        if score == 1:
+            self.get += 1
+        elif score == -1:
+            self.miss += 1
         # return the score and the surface data
         return [score, image_data]
