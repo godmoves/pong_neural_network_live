@@ -48,14 +48,14 @@ def createGraph():
     s = tf.placeholder("float", [None, 84, 84, 4])
 
     # Computes rectified linear unit activation fucntion on  a 2-D convolution given 4-D input and filter tensors. and
-    conv1 = tf.nn.relu(tf.nn.conv2d(s, W_conv1,
-                                    strides=[1, 4, 4, 1], padding="VALID") + b_conv1)
+    conv1 = tf.nn.relu(tf.nn.conv2d(
+        s, W_conv1, strides=[1, 4, 4, 1], padding="VALID") + b_conv1)
 
-    conv2 = tf.nn.relu(tf.nn.conv2d(conv1, W_conv2,
-                                    strides=[1, 2, 2, 1], padding="VALID") + b_conv2)
+    conv2 = tf.nn.relu(tf.nn.conv2d(
+        conv1, W_conv2, strides=[1, 2, 2, 1], padding="VALID") + b_conv2)
 
-    conv3 = tf.nn.relu(tf.nn.conv2d(conv2, W_conv3, 
-                                    strides=[1, 1, 1, 1], padding="VALID") + b_conv3)
+    conv3 = tf.nn.relu(tf.nn.conv2d(
+        conv2, W_conv3, strides=[1, 1, 1, 1], padding="VALID") + b_conv3)
 
     conv3_flat = tf.reshape(conv3, [-1, 3136])
 
