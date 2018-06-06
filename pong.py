@@ -250,6 +250,6 @@ class PongGame:
                 self.recent_100.append(score)
 
         hit_rate = self.get / (self.get + self.miss + 1)
-        hit_rate_100 = (sum(self.recent_100) + 2 * len(self.recent_100)) / (3 * len(self.recent_100) + 1)
+        hit_rate_100 = (sum(self.recent_100) + 3 * len(self.recent_100)) / (4 * len(self.recent_100) + 1)
         # return the score and the surface data
         return [score, image_data, hit_rate, hit_rate_100]
