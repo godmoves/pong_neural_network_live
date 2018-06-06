@@ -93,7 +93,7 @@ def updateBall(paddle1YPos, paddle2YPos, ballXPos, ballYPos, ballXDirection, bal
     elif ballXPos <= 0:
         # negative score
         ballXDirection = 1
-        score = -1
+        score = -3
 
     # check if hits the other side
     if ballXPos >= WINDOW_WIDTH - PADDLE_WIDTH - PADDLE_BUFFER and \
@@ -105,7 +105,7 @@ def updateBall(paddle1YPos, paddle2YPos, ballXPos, ballYPos, ballXDirection, bal
     elif ballXPos >= WINDOW_WIDTH - BALL_WIDTH:
         # positive score
         ballXDirection = -1
-        score = 10
+        score = 2
 
     # if it hits the top
     # move down
@@ -232,24 +232,24 @@ class PongGame:
         drawScore(self.get, self.miss)
         # update the window
         pygame.display.flip()
+
         # record the total score
         self.tally = self.tally + score
         if score == 1:
             self.get += 1
-        elif score == -1:
+        elif score == -3:
             self.miss += 1
-        elif score == 10:
+        elif score == 2:
             print("Pass it!")
 
         if score != 0:
             if len(self.recent_100) < 100:
                 self.recent_100.append(score)
-                hit_rate_100 = (sum(self.recent_100) + len(self.recent_100)) / (2 * len(self.recent_100) + 1)
             else:
                 self.recent_100.pop(0)
                 self.recent_100.append(score)
-                hit_rate_100 = (sum(self.recent_100) + 100) / 201
 
         hit_rate = self.get / (self.get + self.miss + 1)
+        hit_rate_100 = (sum(self.recent_100) + 2 * len(self.recent_100)) / (3 * len(self.recent_100) + 1)
         # return the score and the surface data
         return [score, image_data, hit_rate, hit_rate_100]

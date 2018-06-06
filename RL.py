@@ -13,10 +13,10 @@ ACTIONS = 3  # up,down, stay
 GAMMA = 0.99
 # for updating our gradient or training over time
 INITIAL_EPSILON = 1.0
-FINAL_EPSILON = 0.05
+FINAL_EPSILON = 0.01
 # how many frames to anneal epsilon
 EXPLORE = 500000
-OBSERVE = 50000
+OBSERVE = 150000
 ADDITIONAL_OB = 50000
 # store our experiences, the size of it
 REPLAY_MEMORY = 500000
