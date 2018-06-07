@@ -1,2 +1,2 @@
 # Different way to play pong
-Use different mathods & NN architectures to play pong, WIP.
+Use different methods & NN architectures to play pong, WIP.
