@@ -68,9 +68,9 @@ def drawPaddle2(paddle2YPos):
     pygame.draw.rect(screen, WHITE, paddle2)
 
 
-def drawScore(get, miss):
+def drawScore(get, miss, hit_rate):
     font = pygame.font.Font(None, 28)
-    scorelabel = font.render("Get:{}  Miss:{}".format(get, miss), 1, WHITE)
+    scorelabel = font.render("Get:{}  Miss:{}  HR:{:5.3f}".format(get, miss, hit_rate), 1, WHITE)
     screen.blit(scorelabel, (10, 10))
 
 
@@ -163,6 +163,7 @@ class PongGame:
         self.tally = 0
         self.get = 0
         self.miss = 0
+        self.hit_rate = 0
         self.recent_100 = []
         # initialie positions of paddle
         self.paddle1YPos = WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2
@@ -204,7 +205,7 @@ class PongGame:
         # copies the pixels from our surface to a 3D array. we'll use this for RL
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         # draw score after we get the training frame
-        drawScore(self.get, self.miss)
+        drawScore(self.get, self.miss, self.hit_rate)
         # updates the window
         pygame.display.flip()
         # return our surface data
@@ -229,7 +230,7 @@ class PongGame:
         # get the surface data
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         # draw score after we get the training frame
-        drawScore(self.get, self.miss)
+        drawScore(self.get, self.miss, self.hit_rate)
         # update the window
         pygame.display.flip()
 
@@ -251,5 +252,6 @@ class PongGame:
 
         hit_rate = self.get / (self.get + self.miss + 1)
         hit_rate_100 = (sum(self.recent_100) + 3 * len(self.recent_100)) / (4 * len(self.recent_100) + 1)
+        self.hit_rate = hit_rate_100
         # return the score and the surface data
         return [score, image_data, hit_rate, hit_rate_100]
