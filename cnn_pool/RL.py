@@ -1,10 +1,13 @@
 import tensorflow as tf
 import cv2  # read in pixel data
-import pong  # our class
 import numpy as np  # math
 import random  # random
 # queue data structure. fast appends. and pops. replay memory
 from collections import deque
+
+import sys
+sys.path.append("..")
+from ponggame import pong  # our class
 
 
 # hyper params
@@ -16,7 +19,6 @@ INITIAL_EPSILON = 1.0
 FINAL_EPSILON = 0.01
 # how many frames to anneal epsilon
 EXPLORE = 500000
-OBSERVE = 150000
 ADDITIONAL_OB = 50000
 # store our experiences, the size of it
 REPLAY_MEMORY = 500000
@@ -39,10 +41,10 @@ def createGraph():
     W_conv3 = tf.Variable(tf.truncated_normal([3, 3, 64, 64], stddev=0.02))
     b_conv3 = tf.Variable(tf.zeros([64]))
 
-    W_fc4 = tf.Variable(tf.truncated_normal([3136, 784], stddev=0.02))
-    b_fc4 = tf.Variable(tf.zeros([784]))
+    W_fc4 = tf.Variable(tf.truncated_normal([576, 256], stddev=0.02))
+    b_fc4 = tf.Variable(tf.zeros([256]))
 
-    W_fc5 = tf.Variable(tf.truncated_normal([784, ACTIONS], stddev=0.02))
+    W_fc5 = tf.Variable(tf.truncated_normal([256, ACTIONS], stddev=0.02))
     b_fc5 = tf.Variable(tf.zeros([ACTIONS]))
 
     # input for pixel data
@@ -50,15 +52,17 @@ def createGraph():
 
     # Computes rectified linear unit activation fucntion on  a 2-D convolution given 4-D input and filter tensors. and
     conv1 = tf.nn.relu(tf.nn.conv2d(
-        s, W_conv1, strides=[1, 4, 4, 1], padding="VALID") + b_conv1)
+        s, W_conv1, strides=[1, 4, 4, 1], padding="SAME") + b_conv1)
+    pool1 = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
 
     conv2 = tf.nn.relu(tf.nn.conv2d(
-        conv1, W_conv2, strides=[1, 2, 2, 1], padding="VALID") + b_conv2)
+        pool1, W_conv2, strides=[1, 2, 2, 1], padding="SAME") + b_conv2)
+    pool2 = tf.nn.max_pool(conv2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
 
     conv3 = tf.nn.relu(tf.nn.conv2d(
-        conv2, W_conv3, strides=[1, 1, 1, 1], padding="VALID") + b_conv3)
+        pool2, W_conv3, strides=[1, 1, 1, 1], padding="SAME") + b_conv3)
 
-    conv3_flat = tf.reshape(conv3, [-1, 3136])
+    conv3_flat = tf.reshape(conv3, [-1, 576])
 
     fc4 = tf.nn.relu(tf.matmul(conv3_flat, W_fc4) + b_fc4)
 
@@ -110,7 +114,6 @@ def trainGraph(inp, out, sess):
         saver.restore(sess, checkpoint)
         print("Model restored.")
         steps = global_step.eval()
-        OBSERVE = steps + ADDITIONAL_OB
     else:
         init = tf.global_variables_initializer()
         sess.run(init)
@@ -122,6 +125,7 @@ def trainGraph(inp, out, sess):
         epsilon = expected_epsilon
     else:
         epsilon = FINAL_EPSILON
+    total_observe = steps + ADDITIONAL_OB
 
     # training time
     while(1):
@@ -156,7 +160,7 @@ def trainGraph(inp, out, sess):
             D.popleft()
 
         # training iteration
-        if steps > OBSERVE:
+        if steps > total_observe:
 
             # get values from our replay memory
             minibatch = random.sample(D, BATCH)

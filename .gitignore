@@ -1,5 +1,7 @@
-__pycache__
-*.pyc
-pong-dqn*
-checkpoint
-logs
+ponggame/__pycache__
+cnn_no_pool/__pycache__
+cnn_pool/__pycache__
+cnn_no_pool/checkpoints
+cnn_pool/checkpoints
+cnn_no_pool/logs
+cnn_pool/logs
